@@ -1,0 +1,188 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:agroconnect/screens/auth/views/components/sign_up_form.dart';
+import 'package:agroconnect/route/route_constants.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+import '../../../constants.dart';
+import 'auth_management.dart';
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
+
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final GlobalKey<SignUpFormState> _signInFormKey =
+      GlobalKey<SignUpFormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Image.asset(
+              "assets/images/primary/signupflow.jpg",
+              // height: MediaQuery.of(context).size.height * 0.35,
+              // width: double.infinity,
+              // fit: BoxFit.fitHeight,
+              fit: BoxFit.cover,
+              height: 350,
+
+            ),
+            Padding(
+              padding: const EdgeInsets.all(defaultPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Let’s get started!",
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: defaultPadding / 2),
+                  const Text(
+                    "Please enter your valid data in order to create an account.",
+                  ),
+                  const SizedBox(height: defaultPadding),
+                  SignUpForm(key: _signInFormKey),
+                  const SizedBox(height: defaultPadding),
+                  Row(
+                    children: [
+                      Checkbox(onChanged: (value) {}, value: false),
+                      Expanded(
+                        child: Text.rich(
+                          TextSpan(
+                            text: "I agree with the",
+                            children: [
+                              TextSpan(
+                                recognizer:
+                                    TapGestureRecognizer()
+                                      ..onTap = () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          termsOfServicesScreenRoute,
+                                        );
+                                      },
+                                text: " Terms of service ",
+                                style: const TextStyle(
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const TextSpan(text: "& privacy policy."),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: defaultPadding * 2),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final formState = _signInFormKey.currentState;
+
+                      if (formState == null) {
+                        Fluttertoast.showToast(
+                          msg: "Form not ready yet. Try again.",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black87,
+                          textColor: Colors.white,
+                          fontSize: 16.0,
+                        );
+
+                        // ScaffoldMessenger.of(context).showSnackBar(
+                        //   SnackBar(
+                        //     content: Text("Form not ready yet. Try again."),
+                        //   ),
+                        // );
+                        return;
+                      }
+
+                      if (formState.validate()) {
+                        formState.save();
+                        final email = formState.email;
+                        final password = formState.password;
+
+                        try {
+                          final authService = AuthService();
+                          final user = await authService
+                              .signInWithEmailPassword(
+                                email: formState.email,
+                                password: formState.password,
+                              );
+
+                          Fluttertoast.showToast(
+                            msg: "Account created successfully",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.black87,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
+                          );
+
+                          Navigator.pushNamed(
+                            context,
+                            userDataInfoScreenRoute,
+                            arguments: {
+                              'email': formState.email,
+                              'phoneNumber': null,
+                            },
+                          );
+
+                          // ScaffoldMessenger.of(context).showSnackBar(
+                          //   SnackBar(content: Text("Login successful")),
+                          // );
+
+                          // Navigate to next screen
+
+                        } catch (e) {
+                          Fluttertoast.showToast(
+                            msg: e.toString(),
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.black87,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
+                          );
+                          // ScaffoldMessenger.of(context).showSnackBar(
+                          //   SnackBar(content: Text(e.toString())),
+                          // );
+
+
+                        }
+                      }
+                    },
+
+                    // onPressed: () {
+                    //   // There is 2 more screens while user complete their profile
+                    //   // afre sign up, it's available on the pro version get it now
+                    //   // 🔗 https://theflutterway.gumroad.com/l/fluttershop
+                    //   Navigator.pushNamed(context, entryPointScreenRoute);
+                    // },
+                    child: const Text("Continue"),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Do you have an account?"),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, logInScreenRoute);
+                        },
+                        child: const Text("Log in"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
